@@ -62,7 +62,7 @@ Scene::Scene() {
 	tmeshes[0].onFlag = 1;
 
 	   
-	tmeshes[1].LoadBin("geometry/auditorium.bin");
+	tmeshes[1].LoadBin("geometry/teapot1K.bin");
 	//tmeshes[1].LoadBin("geometry/teapot57K.bin");
 	tmeshes[1].SetCenter(V3(0.0f, 0.0f, 0.0f));  //***************************center of 1
 	tmeshes[1].onFlag = 0;
@@ -79,6 +79,9 @@ Scene::Scene() {
 	ppc1 = new PPC(hfov, fb1->w, fb1->h);
 	
 	ppc0->SetPose(V3(0, 0, -5), V3(0, 0, -100), V3(0, 1, 0));
+	float roll = -45.0f;
+	ppc0->Roll(roll);
+	ppc1->PanLeftRight(0.0f);
 
 #if 0
 			our lightsource. 
@@ -102,7 +105,10 @@ Scene::Scene() {
 	{
 		cout << i << endl;
 		RenderProjector(fb0, fb1, ppc0, ppc1);
-		ppc0->PanLeftRight(-0.10f);
+		ppc0->Roll(roll*-1.0f);
+		ppc0->PanLeftRight(-0.30f);
+		ppc0->Roll(roll);
+		//ppc1->PanLeftRight(-0.20f);
 	}
 	
 	
@@ -160,6 +166,9 @@ void Scene::RenderProjector(FrameBuffer* fb0, FrameBuffer* fb1, PPC* ppc0, PPC* 
 
 		V3 col1 = V3(1, 0, 0);
 		fb1->Draw3DPoint(ppc0->C, ppc1, col1.GetColor(), 10);
+		fb1->Draw3DPoint(ppc0->c * 3 + ppc0->C,  ppc1, col1.GetColor(), 10);
+		//fb1->Draw3DSegment(ppc0->C, ppc0->GetVD() * 3+ppc0->C, ppc1, col1, col1);
+		fb1->Draw3DSegment(ppc0->C, ppc0->c * 3 + ppc0->C, ppc1, col1, col1);
 
 #if 0
 	Now call the renderFilledProjector() function to update the camera. 
