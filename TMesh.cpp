@@ -173,16 +173,29 @@ void TMesh::DrawPlanerRect(V3 cc, float sideLength, unsigned int color) {
 		colors[vi].SetFromColor(color);		
 	}
 
-	V3 v01 = verts[1] - verts[0];
-	V3 v03 = verts[3] - verts[1];
+	V3 v01 = verts[0] - verts[1];
+	V3 v03 = verts[0] - verts[2];
 
-	V3 normal = v01 ^ v03;
+	V3 normal = v01 ^ v03.Normalized();
 
 	normal=normal.Normalized();
 	for (int vi = 0; vi < 4; vi++) {
 		normals[vi]=normal;
 	}
 
+}
+
+void TMesh::DrawPlanerRectUpdateNormal() {
+
+	V3 v01 = verts[0] - verts[1];
+	V3 v03 = verts[0] - verts[2];
+
+	V3 normal = v01 ^ v03.Normalized();
+
+	normal = normal.Normalized();
+	for (int vi = 0; vi < 4; vi++) {
+		normals[vi] = normal;
+	}
 }
 
 void TMesh::DrawWireFrame(FrameBuffer *fb, PPC *ppc, unsigned int color) {
@@ -461,7 +474,7 @@ void TMesh::RenderFilled(FrameBuffer* fb, PPC* ppc, V3 C, V3 L, float ka) {
 }
 
 
-void TMesh::RenderShadowZmap(FrameBuffer* fb, PPC* LightSrcAsPPC, float* zb1)
+void TMesh::RenderShadowZmap(FrameBuffer* fb, PPC* LightSrcAsPPC, float* zbx)
 {
 	//int trisN = 1;
 
@@ -508,7 +521,7 @@ void TMesh::RenderShadowZmap(FrameBuffer* fb, PPC* LightSrcAsPPC, float* zb1)
 					continue; // outside of triangle
 				float currz = zLE * currPix;
 				//cout << currz << endl;
-				if (fb->FartherLightZ(fb->zbL1, u, v, currz))					
+				if (fb->FartherLightZ(zbx, u, v, currz))					
 					continue; // hidden
 				
 				//float colz = abs(currz)/10;
@@ -526,9 +539,12 @@ void TMesh::RenderShadowZmap(FrameBuffer* fb, PPC* LightSrcAsPPC, float* zb1)
 
 
 
-void TMesh::RenderFilledWithShadow(FrameBuffer* fb, PPC* ppc, PPC* LightPPC, V3 C, V3 L, float ka) {
-
-
+void TMesh::RenderFilledWithShadow(FrameBuffer* fb, PPC* ppc, float* zbx, PPC* LightPPC, V3 C, V3 L, float ka) {
+	
+#if 0
+	project three vertices of the triangle camera plane
+		check boundary
+#endif
 
 	V3* pverts = new V3[vertsN];
 	for (int vi = 0; vi < vertsN; vi++) {
@@ -579,7 +595,7 @@ void TMesh::RenderFilledWithShadow(FrameBuffer* fb, PPC* ppc, PPC* LightPPC, V3 
 		nLEm[1] = ssim * nm[1];
 		nLEm[2] = ssim * nm[2];
 
-
+		
 		for (int v = top; v <= bottom; v++) {
 			for (int u = left; u <= right; u++) {
 				V3 currPix(.5f + (float)u, .5f + (float)v, 1.0f);
@@ -594,7 +610,7 @@ void TMesh::RenderFilledWithShadow(FrameBuffer* fb, PPC* ppc, PPC* LightPPC, V3 
 				LightPPC->Project(unprojectedP, lighFrameP);
 				
 				
-				if (fb->FartherLightZCompare(fb->zbL1,lighFrameP[0], lighFrameP[1],lighFrameP[2] ))
+				if (fb->FartherLightZCompare(zbx,lighFrameP[0], lighFrameP[1],lighFrameP[2] ))
 				{
 
 					V3 currColor = cLEm * currPix;					
@@ -616,12 +632,13 @@ void TMesh::RenderFilledWithShadow(FrameBuffer* fb, PPC* ppc, PPC* LightPPC, V3 
 				// normal at current pixel
 				V3 currNormal = nLEm * currPix;
 				V3 nv = currNormal.Normalized();
-
+				
 				// 3D surface point at current pixel
 				V3 currP = ppc->UnProject(V3(currPix[0], currPix[1], currz));
-
+			
 				// light vector
 				V3 lv = (L - currP).Normalized();
+				//cout << "nv lv" << nv << " " << lv << endl;
 				currColor = C.Light(lv, nv, ka);
 				fb->Set(u, v, currColor.GetColor());
 			}

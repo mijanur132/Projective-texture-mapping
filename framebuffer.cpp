@@ -18,6 +18,10 @@ FrameBuffer::FrameBuffer(int u0, int v0,
 	pix = new unsigned int[w*h];
 	zb = new float[w*h];
 	zbL1 = new float[w * h];
+	zbL2 = new float[w * h];
+	zbL3 = new float[w * h];
+	zbL4 = new float[w * h];
+
 
 }
 
@@ -208,7 +212,8 @@ int FrameBuffer::FartherLightZCompare(float* zb1, int u, int v, float currz) {
 	if (u < 0 || u > w - 1 || v < 0 || v > h - 1)
 		return 1;
 	int uv = (h - 1 - v) * w + u;
-	if (currz+2 < zbL1[uv] )
+	//if (currz+2 < zbL1[uv] )
+	if (currz +02.25 < zbL1[uv])
 		return 1;
 	else {
 		return 0;
